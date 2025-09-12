@@ -1,36 +1,36 @@
 import httpStatus from "http-status";
 import catchAsync from "../../utilities/catchAsync";
 import sendResponse from "../../utilities/sendResponse";
-import { StaffServices } from "./staff.service";
 import { TImageFiles } from "../../interface/image.interface";
+import { AgentServices } from "./agent.service";
 
-const allStaffs = catchAsync(async (req, res) => {
-  const result = await StaffServices.getAllStaffsFromDB(req.query);
+const allAgents = catchAsync(async (req, res) => {
+  const result = await AgentServices.AllAgentsFromDB(req.query);
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
-    message: "Staffs retrieved successfully",
+    message: "Agents retrieved successfully",
     meta: result.meta,
     data: result.data,
   });
 });
 
-const singleStaff = catchAsync(async (req, res) => {
+const singleAgent = catchAsync(async (req, res) => {
   const { id } = req.params;
-  const result = await StaffServices.singleStaffFromDB(id);
+  const result = await AgentServices.singleAgentFromDB(id);
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
-    message: "Staff retrieved successfully",
+    message: "Agent retrieved successfully",
     data: result,
   });
 });
 
-const updateStaff = catchAsync(async (req, res) => {
+const updateAgent = catchAsync(async (req, res) => {
   const { id } = req.params;
-  const result = await StaffServices.updateStaffIntoDB(
+  const result = await AgentServices.updateAgentIntoDB(
     id,
     req.files as TImageFiles,
     req.body
@@ -39,26 +39,26 @@ const updateStaff = catchAsync(async (req, res) => {
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
-    message: "Staff updated successfully",
+    message: "Agent updated successfully",
     data: result,
   });
 });
 
-const deleteStaff = catchAsync(async (req, res) => {
+const deleteAgent = catchAsync(async (req, res) => {
   const { id } = req.params;
-  const result = await StaffServices.deleteStaffFromDB(id);
+  const result = await AgentServices.deleteAgentFromDB(id);
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
-    message: "Staff deleted successfully",
+    message: "Agent deleted successfully",
     data: result,
   });
 });
 
-export const StaffControllers = {
-  allStaffs,
-  singleStaff,
-  updateStaff,
-  deleteStaff,
+export const AgentControllers = {
+  allAgents,
+  singleAgent,
+  updateAgent,
+  deleteAgent,
 };

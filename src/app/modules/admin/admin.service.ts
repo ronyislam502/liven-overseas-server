@@ -67,12 +67,55 @@ const deleteAdminFromDB = async (id: string) => {
   }
 };
 
-const updateAdminIntoDB=async(id:string, images:TImageFiles, payload:Partial<TAdmin>)=>{
-}
+const updateAdminIntoDB = async (
+  id: string,
+  images: TImageFiles,
+  payload: Partial<TAdmin>
+) => {
+  const isAdmin = await Admin.findById(id);
+
+  if (!isAdmin) {
+    throw new AppError(httpStatus.NOT_FOUND, "Admin not found");
+  }
+
+  const avatar = images?.avatar[0];
+  const nidImgs = images?.nidImg;
+
+  if (avatar && avatar.path) {
+    payload.avatar = avatar.path;
+  }
+
+  if (nidImgs) {
+    payload.nidImg = nidImgs?.map((file) => file.path);
+  }
+
+  const { presentAddress, permanentAddress, ...remainingData } = payload;
+
+  const modifiedData: Record<string, unknown> = { ...remainingData };
+
+  if (presentAddress && Object.keys(presentAddress)) {
+    for (const [key, value] of Object.entries(presentAddress)) {
+      modifiedData[`presentAddress.${key}`] = value;
+    }
+  }
+
+  if (permanentAddress && Object.keys(permanentAddress)) {
+    for (const [key, value] of Object.entries(permanentAddress)) {
+      modifiedData[`permanentAddress.${key}`] = value;
+    }
+  }
+
+  const result = await Admin.findByIdAndUpdate(isAdmin._id, modifiedData, {
+    new: true,
+    runValidators: true,
+  });
+
+  return result;
+};
 
 export const AdminServices = {
   allAdminsFromDB,
   singleAdminFromDB,
   deleteAdminFromDB,
-  updateAdminIntoDB
+  updateAdminIntoDB,
 };

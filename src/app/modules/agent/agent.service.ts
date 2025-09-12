@@ -1,23 +1,23 @@
-import httpStatus from "http-status";
-import QueryBuilder from "../../builder/queryBuilder";
-import AppError from "../../errors/AppError";
-import { TImageFiles } from "../../interface/image.interface";
-import { UserSearchableFields } from "../../utilities/const";
-import { TStaff } from "./staff.interface";
-import { Staff } from "./staff.model";
 import mongoose from "mongoose";
+import QueryBuilder from "../../builder/queryBuilder";
+import { UserSearchableFields } from "../../utilities/const";
+import { Agent } from "./agent.model";
+import AppError from "../../errors/AppError";
+import httpStatus from "http-status";
 import { User } from "../user/user.model";
+import { TImageFiles } from "../../interface/image.interface";
+import { TAgent } from "./agent.interface";
 
-const getAllStaffsFromDB = async (query: Record<string, unknown>) => {
-  const staffQuery = new QueryBuilder(Staff.find(), query)
+const AllAgentsFromDB = async (query: Record<string, unknown>) => {
+  const agentQuery = new QueryBuilder(Agent.find(), query)
     .search(UserSearchableFields)
     .fields()
     .paginate()
     .sort()
     .filter();
 
-  const meta = await staffQuery.countTotal();
-  const data = await staffQuery.modelQuery;
+  const meta = await agentQuery.countTotal();
+  const data = await agentQuery.modelQuery;
 
   return {
     meta,
@@ -25,27 +25,33 @@ const getAllStaffsFromDB = async (query: Record<string, unknown>) => {
   };
 };
 
-const singleStaffFromDB = async (id: string) => {
-  const result = await Staff.findById(id);
+const singleAgentFromDB = async (id: string) => {
+  const result = await Agent.findById(id);
 
   return result;
 };
 
-const deleteStaffFromDB = async (id: string) => {
+const deleteAgentFromDB = async (id: string) => {
   const session = await mongoose.startSession();
 
+  const isAgent = await Agent.findById(id);
+
+  if (!isAgent) {
+    throw new AppError(httpStatus.NOT_FOUND, "Agent not found");
+  }
+
   try {
-    const deletedStaff = await Staff.findByIdAndUpdate(
+    const deletedAgent = await Agent.findByIdAndUpdate(
       id,
       { isDeleted: true },
       { new: true, session }
     );
 
-    if (!deletedStaff) {
-      throw new AppError(httpStatus.BAD_REQUEST, "Failed to delete staff");
+    if (!deletedAgent) {
+      throw new AppError(httpStatus.BAD_REQUEST, "Failed to delete agent");
     }
 
-    const userId = deletedStaff.user;
+    const userId = deletedAgent.user;
     const deletedUser = await User.findByIdAndUpdate(
       userId,
       { isDeleted: true },
@@ -59,7 +65,7 @@ const deleteStaffFromDB = async (id: string) => {
     await session.commitTransaction();
     await session.endSession();
 
-    return deletedStaff;
+    return deletedAgent;
   } catch (error: any) {
     await session.abortTransaction();
     await session.endSession();
@@ -67,19 +73,20 @@ const deleteStaffFromDB = async (id: string) => {
   }
 };
 
-const updateStaffIntoDB = async (
+const updateAgentIntoDB = async (
   id: string,
   images: TImageFiles,
-  payload: Partial<TStaff>
+  payload: Partial<TAgent>
 ) => {
-  const isStaff = await Staff.findById(id);
+  const isAgent = await Agent.findById(id);
 
-  if (!isStaff) {
-    throw new AppError(httpStatus.NOT_FOUND, "Staff not found");
+  if (!isAgent) {
+    throw new AppError(httpStatus.NOT_FOUND, "Agent not found");
   }
 
   const avatar = images?.avatar[0];
   const nidImgs = images?.nidImg;
+  const passportImgs = images?.passportImg;
 
   if (avatar && avatar.path) {
     payload.avatar = avatar.path;
@@ -87,6 +94,10 @@ const updateStaffIntoDB = async (
 
   if (nidImgs) {
     payload.nidImg = nidImgs?.map((file) => file.path);
+  }
+
+  if (passportImgs) {
+    payload.nidImg = passportImgs?.map((file) => file.path);
   }
 
   const { presentAddress, permanentAddress, ...remainingData } = payload;
@@ -105,7 +116,7 @@ const updateStaffIntoDB = async (
     }
   }
 
-  const result = await Staff.findByIdAndUpdate(isStaff._id, modifiedData, {
+  const result = await Agent.findByIdAndUpdate(isAgent._id, modifiedData, {
     new: true,
     runValidators: true,
   });
@@ -113,9 +124,9 @@ const updateStaffIntoDB = async (
   return result;
 };
 
-export const StaffServices = {
-  getAllStaffsFromDB,
-  singleStaffFromDB,
-  updateStaffIntoDB,
-  deleteStaffFromDB,
+export const AgentServices = {
+  AllAgentsFromDB,
+  singleAgentFromDB,
+  updateAgentIntoDB,
+  deleteAgentFromDB,
 };

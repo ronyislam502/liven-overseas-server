@@ -36,6 +36,22 @@ const createStaff = catchAsync(async (req, res) => {
   });
 });
 
+const createAgent = catchAsync(async (req, res) => {
+  const { password, admin } = req.body;
+  const result = await UserServices.createAgentIntoDB(
+    req.files as TImageFiles,
+    password,
+    admin
+  );
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Staff Created successfully",
+    data: result,
+  });
+});
+
 const getAllUsers = catchAsync(async (req, res) => {
   const users = await UserServices.getAllUsersFromDB(req.query);
 
@@ -52,4 +68,5 @@ export const UserControllers = {
   createAdmin,
   getAllUsers,
   createStaff,
+  createAgent,
 };

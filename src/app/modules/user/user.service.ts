@@ -10,6 +10,7 @@ import AppError from "../../errors/AppError";
 import { Admin } from "../admin/admin.model";
 import { USER_ROLE, UserSearchableFields } from "../../utilities/const";
 import { TStaff } from "../staff/staff.interface";
+import { TAgent } from "../agent/agent.interface";
 
 const createAdminIntoDB = async (
   images: TImageFiles,
@@ -115,6 +116,63 @@ const createStaffIntoDB = async (
   }
 };
 
+const createAgentIntoDB = async (
+  images: TImageFiles,
+  password: string,
+  payload: TAgent
+) => {
+  const userData: Partial<TUser> = {
+    name: payload.name,
+    email: payload.email,
+    password: password || (config.default_password as string),
+    role: USER_ROLE?.AGENT,
+  };
+
+  const session = await mongoose.startSession();
+
+  try {
+    session.startTransaction();
+
+    const avatar = images?.avatar[0];
+    const nidImgs = images?.nidImg;
+    const passportImgs = images?.passportImg;
+
+    if (avatar && avatar.path) {
+      payload.avatar = avatar.path;
+    }
+
+    if (nidImgs) {
+      payload.nidImg = nidImgs?.map((file) => file.path);
+    }
+
+    if (passportImgs) {
+      payload.nidImg = passportImgs?.map((file) => file.path);
+    }
+
+    const newUser = await User.create([userData], { session });
+
+    if (!newUser?.length) {
+      throw new AppError(httpStatus.BAD_REQUEST, "Failed to create user");
+    }
+
+    payload.user = newUser[0]._id;
+
+    const newAgent = await Admin.create([payload], { session });
+    if (!newAgent.length) {
+      throw new AppError(httpStatus.BAD_REQUEST, "Failed to create agent");
+    }
+
+    await session.commitTransaction();
+    await session.endSession();
+
+    return newAgent;
+  } catch (error: any) {
+    await session.abortTransaction();
+    await session.endSession();
+    throw new Error(error);
+  }
+};
+
 const getAllUsersFromDB = async (query: Record<string, unknown>) => {
   const userQuery = new QueryBuilder(User.find(), query)
     .search(UserSearchableFields)
@@ -135,5 +193,6 @@ const getAllUsersFromDB = async (query: Record<string, unknown>) => {
 export const UserServices = {
   createAdminIntoDB,
   createStaffIntoDB,
+  createAgentIntoDB,
   getAllUsersFromDB,
 };

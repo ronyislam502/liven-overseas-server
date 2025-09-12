@@ -1,9 +1,9 @@
 import { model, Schema } from "mongoose";
 import { Gender, TAddress } from "../../utilities/const";
-import { StaffModel, TStaff } from "./staff.interface";
 import { addressSchema } from "../admin/admin.model";
+import { AgentModel, TAgent } from "./agent.interface";
 
-const staffSchema = new Schema<TStaff, StaffModel>(
+const agentSchema = new Schema<TAgent, AgentModel>(
   {
     user: {
       type: Schema.Types.ObjectId,
@@ -49,6 +49,18 @@ const staffSchema = new Schema<TStaff, StaffModel>(
         default: "",
       },
     ],
+    passportNo: {
+      type: String,
+      required: [true, "PassportNo is required"],
+      unique: true,
+    },
+    passportImg: [
+      {
+        type: String,
+        required: [true, "PassportImg is required"],
+        default: "",
+      },
+    ],
     dateOfBirth: {
       type: Date,
     },
@@ -66,25 +78,25 @@ const staffSchema = new Schema<TStaff, StaffModel>(
   }
 );
 
-staffSchema.pre("find", function (next) {
+agentSchema.pre("find", function (next) {
   this.find({ isDeleted: { $ne: true } });
   next();
 });
 
-staffSchema.pre("findOne", function (next) {
+agentSchema.pre("findOne", function (next) {
   this.find({ isDeleted: { $ne: true } });
   next();
 });
 
-staffSchema.pre("aggregate", function (next) {
+agentSchema.pre("aggregate", function (next) {
   this.pipeline().unshift({ $match: { isDeleted: { $ne: true } } });
   next();
 });
 
-staffSchema.statics.isUserExists = async function (email: string) {
-  const existingUser = await Staff.findOne({ email });
+agentSchema.statics.isUserExists = async function (email: string) {
+  const existingUser = await Agent.findOne({ email });
 
   return existingUser;
 };
 
-export const Staff = model<TStaff, StaffModel>("Staff", staffSchema);
+export const Agent = model<TAgent, AgentModel>("Agent", agentSchema);
