@@ -4,6 +4,7 @@ import { UserRoutes } from "../modules/user/user.route";
 import { AdminRoutes } from "../modules/admin/admin.route";
 import { StaffRoutes } from "../modules/staff/staff.route";
 import { AgentRoutes } from "../modules/agent/agent.route";
+import { CategoryRoutes } from "../modules/category/category.route";
 
 const router = Router();
 
@@ -27,6 +28,10 @@ const moduleRoutes = [
   {
     path: "/agents",
     route: AgentRoutes,
+  },
+  {
+    path: "/categories",
+    route: CategoryRoutes,
   },
 ];
 
