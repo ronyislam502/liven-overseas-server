@@ -20,6 +20,10 @@ const serviceSchema = new Schema<TService>(
       type: Number,
       required: [true, "Price is required"],
     },
+    duration: {
+      type: String,
+      required: [true, "Duration is required"],
+    },
     extra: {
       type: String,
       required: [true, "extra is required"],

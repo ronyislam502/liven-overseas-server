@@ -6,6 +6,7 @@ const createServiceValidationSchema = z.object({
     country: z.string({ required_error: "Country is required" }),
     visa: z.string({ required_error: "Visa name is required" }),
     price: z.number({ required_error: "Price is required" }),
+    duration: z.string({ required_error: "Duration  is required" }),
     extra: z.number({ required_error: "Price is required" }),
   }),
 });
